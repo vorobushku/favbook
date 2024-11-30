@@ -1,3 +1,12 @@
+import java.util.Properties
+
+//// Чтение данных из local.properties
+val localProperties = rootProject.file("local.properties")
+val googleBooksApiKey: String = Properties().apply {
+    localProperties.inputStream().use { load(it) }
+}.getProperty("GOOGLE_BOOKS_API_KEY") ?: throw IllegalStateException("API Key not found")
+
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -18,6 +27,13 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Используем правильную форму для добавления custom BuildConfig поля
+        buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"$googleBooksApiKey\"")
+    }
+
+    buildFeatures {
+        buildConfig = true // Эта строка включит поддержку кастомных полей в BuildConfig
     }
 
     buildTypes {
@@ -27,6 +43,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
         }
     }
     compileOptions {
@@ -55,6 +72,8 @@ dependencies {
     implementation ("androidx.navigation:navigation-compose:2.8.4")
     implementation ("androidx.compose.material:material-icons-core:1.7.5")
     implementation ("androidx.compose.material:material-icons-extended:1.7.5") // для расширенных иконок
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
 
     implementation(libs.androidx.core.ktx)

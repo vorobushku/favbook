@@ -1,6 +1,7 @@
 package com.example.favbook
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,49 +24,90 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import java.util.Properties
+import com.example.favbook.BuildConfig // Пример правильного импорта
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            FavbookTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    AppNavigator()
+            val navController = rememberNavController()
+            // Создаем Scaffold с навигацией
+            Scaffold(
+                bottomBar = { BottomBar(navController) } // Нижний бар с навигацией
+            ) { innerPadding ->
+                // Основной контент
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    AppNavigator(navController) // Обновленная навигация
                 }
             }
         }
+
+        try {
+            val apiKey = BuildConfig.GOOGLE_BOOKS_API_KEY
+            Log.d("API_KEY", "Google Books API Key: $apiKey")
+        } catch (e: Exception) {
+            Log.e("API_KEY", "Error retrieving API key: ${e.message}")
+            }
     }
 }
 
 @Composable
-fun AppNavigator() {
-    val navController = rememberNavController()
+fun AppNavigator(navController: NavHostController) {
 
     NavHost(navController = navController, startDestination = "main_screen") {
         composable("main_screen") { MainScreen(navController) }
-        // Здесь можно добавить другие экраны
+        composable("book_screen") { BookScreen() }
+        composable("search_screen") { SearchScreen() }
+        composable("add_screen") { AddScreen() }
     }
 }
 
 @Composable
 fun MainScreen(navController: NavHostController) {
-    Scaffold(
-        bottomBar = { BottomBar(navController) }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            Text(
-                text = "Главный экран",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Главный экран",
+            style = MaterialTheme.typography.titleLarge,
+        )
+    }
+}
+
+@Composable
+fun BookScreen() {
+    // Просто пустой экран для демонстрации
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Экран книг", style = MaterialTheme.typography.titleLarge)
+    }
+}
+
+@Composable
+fun SearchScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Экран поиска:", style = MaterialTheme.typography.titleLarge)
+    }
+}
+
+@Composable
+fun AddScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Экран добавления", style = MaterialTheme.typography.titleLarge)
     }
 }
 
@@ -91,7 +133,7 @@ fun BottomBar(navController: NavHostController) {
         Spacer(modifier = Modifier.weight(1f)) // Центрируем другие кнопки
 
         // Кнопка "Книжка"
-        IconButton(onClick = { navController.navigate("main_screen") }) {
+        IconButton(onClick = { navController.navigate("book_screen") }) {
             Icon(
                 imageVector = Icons.Filled.Book,
                 contentDescription = "Списки"
@@ -102,7 +144,7 @@ fun BottomBar(navController: NavHostController) {
         Spacer(modifier = Modifier.weight(1f)) // Заполняет пространство между иконками
 
         // Кнопка "Поиск"
-        IconButton(onClick = { navController.navigate("main_screen") }) {
+        IconButton(onClick = { navController.navigate("search_screen") }) {
             Icon(
                 imageVector = Icons.Filled.Search,
                 contentDescription = "Поиск"
@@ -114,7 +156,7 @@ fun BottomBar(navController: NavHostController) {
 
         // Кнопка "Добавить" (Плюсик)
         IconButton(
-            onClick = { navController.navigate("main_screen") },
+            onClick = { navController.navigate("add_screen") },
             modifier = Modifier.padding(end = 16.dp) // Добавляем отступ от правого края
         ) {
             Icon(
@@ -128,5 +170,13 @@ fun BottomBar(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    AppNavigator()
+    val navController = rememberNavController()
+    // В Preview передаем корректный Scaffold с innerPadding
+    Scaffold(
+        bottomBar = { BottomBar(navController) }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            AppNavigator(navController)
+        }
+    }
 }
