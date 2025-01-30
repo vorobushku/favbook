@@ -69,11 +69,14 @@ android {
 dependencies {
 
     //УБРАТЬ ВСЕ В libs.versions
-    implementation ("androidx.navigation:navigation-compose:2.8.4")
-    implementation ("androidx.compose.material:material-icons-core:1.7.5")
-    implementation ("androidx.compose.material:material-icons-extended:1.7.5") // для расширенных иконок
+    implementation ("com.squareup.okhttp3:okhttp:4.10.0") // или более новая версия
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.10.0") // зависимость для логирования
+    implementation ("androidx.navigation:navigation-compose:2.8.6")
+    implementation ("androidx.compose.material:material-icons-core:1.7.7")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.7") // для расширенных иконок
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
 
     implementation(libs.androidx.core.ktx)
