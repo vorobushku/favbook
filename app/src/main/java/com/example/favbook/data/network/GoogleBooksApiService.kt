@@ -1,19 +1,15 @@
 package com.example.favbook.data.network
 
+import com.example.favbook.BuildConfig
+import com.example.favbook.data.model.GoogleBooksResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
-import com.example.favbook.data.model.OpenLibraryResponse
 
 interface GoogleBooksApiService {
-//    @GET("volumes")
-////    suspend fun searchBooks(
-////        @Query("q") query: String,
-////        @Query("key") apiKey: String,
-////        @Query("langRestrict") language: String = "ru"
-////    ): GoogleBooksResponse
 
-    @GET("search.json")
+    @GET("volumes")
     suspend fun searchBooks(
-        @Query("q") query: String
-    ): OpenLibraryResponse
+        @Query("q") query: String,
+        @Query("key") apiKey: String = BuildConfig.GOOGLE_BOOKS_API_KEY
+    ): GoogleBooksResponse
 }
