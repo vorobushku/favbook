@@ -1,10 +1,10 @@
 package com.example.favbook
 
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,19 +27,29 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.favbook.data.model.BookItem
 import com.example.favbook.data.network.RetrofitInstance
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 
 class MainActivity : ComponentActivity() {
@@ -47,45 +57,163 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
+            val user = rememberFirebaseUser()
+            val startDestination = if (user == null) "auth_screen" else "main_screen"
+
             // Создаем Scaffold с навигацией
             Scaffold(
                 bottomBar = { BottomBar(navController) } // Нижний бар с навигацией
             ) { innerPadding ->
                 // Основной контент
                 Box(modifier = Modifier.padding(innerPadding)) {
-                    AppNavigator(navController) // Обновленная навигация
+                    AppNavigator(navController,startDestination) // Обновленная навигация
                 }
             }
         }
     }
 
     @Composable
-    fun AppNavigator(navController: NavHostController) {
-        NavHost(navController = navController, startDestination = "main_screen") {
+    fun AppNavigator(navController: NavHostController,startDectination: String) {
+        NavHost(navController = navController, startDestination = startDectination) {
+            composable("auth_screen") { AuthScreen(navController) }
             composable("main_screen") { MainScreen(navController) }
             composable("book_screen") { BookScreen() }
             composable("search_screen") { SearchScreen(navController) }
             composable("add_screen") { AddScreen() }
             // Экран деталей книги
+
             composable("book_detail_screen/{title}/{coverUrl}") { backStackEntry ->
-                val title = backStackEntry.arguments?.getString("title") ?: "Без названия"
-                val coverUrl = backStackEntry.arguments?.getString("coverUrl") ?: ""
+                val title = backStackEntry.arguments?.getString("title")?.let {
+                    URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+                } ?: "Без названия"
+
+                val coverUrl = backStackEntry.arguments?.getString("coverUrl")?.let {
+                    URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+                } ?: ""
+
                 BookDetailScreen(title, coverUrl)
             }
+
         }
+    }
+
+    @Composable
+    fun AuthScreen(navController: NavHostController) {
+        val auth = rememberAuth()
+        val email = remember { mutableStateOf("") }
+        val password = remember { mutableStateOf("") }
+        val errorMessage = remember { mutableStateOf<String?>(null) }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Вход / Регистрация", style = MaterialTheme.typography.titleLarge)
+
+            OutlinedTextField(
+                value = email.value,
+                onValueChange = { email.value = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = password.value,
+                onValueChange = { password.value = it },
+                label = { Text("Пароль") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    auth.signInWithEmailAndPassword(email.value, password.value)
+                        .addOnSuccessListener {
+                            navController.navigate("main_screen") {
+                                popUpTo("auth_screen") { inclusive = true }
+                            }
+                        }
+                        .addOnFailureListener { errorMessage.value = it.message }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Войти")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    auth.createUserWithEmailAndPassword(email.value, password.value)
+                        .addOnSuccessListener {
+                            navController.navigate("main_screen") {
+                                popUpTo("auth_screen") { inclusive = true }
+                            }
+                        }
+                        .addOnFailureListener { errorMessage.value = it.message }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Зарегистрироваться")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            errorMessage.value?.let {
+                Text(text = it, color = Color.Red)
+            }
+        }
+    }
+
+    @Composable
+    fun rememberFirebaseUser(): FirebaseUser? {
+        val userState = produceState<FirebaseUser?>(initialValue = null) {
+            value = FirebaseAuth.getInstance().currentUser
+        }
+        return userState.value
+    }
+
+    @Composable
+    fun rememberAuth(): FirebaseAuth {
+        return remember { FirebaseAuth.getInstance() }
     }
 
     //Возможно стоит удалить navController
     @Composable
     fun MainScreen(navController: NavHostController) {
-        Box(
+        val auth = FirebaseAuth.getInstance()
+
+        Column(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Главный экран",
                 style = MaterialTheme.typography.titleLarge,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    auth.signOut()
+                    navController.navigate("auth_screen") {
+                        popUpTo("main_screen") { inclusive = true }
+                    }
+                }
+            ) {
+                Text("Выйти")
+            }
         }
     }
 
@@ -106,12 +234,16 @@ class MainActivity : ComponentActivity() {
         val books = remember { mutableStateOf<List<BookItem>>(emptyList()) }
         val errorMessage = remember { mutableStateOf<String?>(null) }
 
+        LaunchedEffect(searchQuery.value) {
+            delay(500) // Дебаунс 500 мс
+            searchBooksApi(searchQuery.value, books, errorMessage)
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Строка поиска
             OutlinedTextField(
                 value = searchQuery.value,
                 onValueChange = { searchQuery.value = it },
@@ -122,39 +254,21 @@ class MainActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Кнопка поиска
-            Button(
-                onClick = {
-                    searchBooksApi(searchQuery.value, books, errorMessage)
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("Поиск")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Результаты или ошибка
-            if (!errorMessage.value.isNullOrEmpty()) {
-                Text(
-                    text = errorMessage.value ?: "",
-                    color = Color.Red,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            } else {
-                LazyColumn {
-                    items(books.value) { book ->
-                        BookItem(book, navController) // Передаем navController
-                    }
+            LazyColumn {
+                items(books.value) { book ->
+                    BookItem(book, navController)
                 }
             }
         }
     }
 
+
     @Composable
     fun BookItem(book: BookItem, navController: NavHostController) {
-        // Заменяем http на https в URL, если это возможно
         val coverUrl = book.volumeInfo.imageLinks?.thumbnail?.replace("http:", "https:")
+
+        val encodedTitle = URLEncoder.encode(book.volumeInfo.title, StandardCharsets.UTF_8.toString())
+        val encodedCoverUrl = URLEncoder.encode(coverUrl ?: "", StandardCharsets.UTF_8.toString())
 
         Row(
             modifier = Modifier
@@ -163,26 +277,17 @@ class MainActivity : ComponentActivity() {
                 .background(Color.LightGray)
                 .padding(8.dp)
                 .clickable {
-                    val encodedTitle = Uri.encode(book.volumeInfo.title)
-                    val encodedCoverUrl = Uri.encode(coverUrl)
                     navController.navigate("book_detail_screen/$encodedTitle/$encodedCoverUrl")
                 },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!coverUrl.isNullOrEmpty()) {
-                AsyncImage(
-                    model = coverUrl, // Используем https
-                    contentDescription = "Обложка книги",
-                    modifier = Modifier.size(65.dp),
-                    placeholder = painterResource(R.drawable.placeholder),
-                    error = painterResource(R.drawable.error),
-                    onError = { e ->
-                        Log.e("AsyncImage", "Ошибка загрузки: ${e.result.throwable.message}")
-                    }
-                )
-            } else {
-                Log.e("BookCover", "Cover URL is empty!")
-            }
+            AsyncImage(
+                model = coverUrl?.takeIf { it.isNotEmpty() },
+                contentDescription = "Обложка книги",
+                placeholder = painterResource(R.drawable.placeholder),
+                error = painterResource(R.drawable.placeholder),
+                modifier = Modifier.size(50.dp)
+            )
 
             Column {
                 Text(
@@ -247,21 +352,15 @@ class MainActivity : ComponentActivity() {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Log.d("CoverUrl", coverUrl)
-                // Если есть обложка, показываем её
-                if (coverUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = coverUrl, // Используем https
-                        contentDescription = "Обложка книги",
-                        modifier = Modifier.size(200.dp),
-                        placeholder = painterResource(R.drawable.placeholder),
-                        error = painterResource(R.drawable.error),
-                        onError = { e ->
-                            Log.e("AsyncImage", "Ошибка загрузки: ${e.result.throwable.message}")
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                AsyncImage(
+                    model = coverUrl.takeIf { it.isNotEmpty() }, // Использует URL только если он не пустой
+                    contentDescription = "Обложка книги",
+                    placeholder = painterResource(R.drawable.placeholder),
+                    error = painterResource(R.drawable.placeholder), // Заглушка при ошибке загрузки
+                    modifier = Modifier.size(200.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = title,
@@ -337,7 +436,7 @@ class MainActivity : ComponentActivity() {
             bottomBar = { BottomBar(navController) }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
-                AppNavigator(navController)
+                //AppNavigator(navController)
             }
         }
     }
