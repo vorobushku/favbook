@@ -10,7 +10,7 @@ val googleBooksApiKey: String = Properties().apply {
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("com.google.gms.google-services")
+    alias(libs.plugins.gmsGoogleServices)
 }
 
 android {
@@ -69,18 +69,16 @@ android {
 
 dependencies {
 
-    //УБРАТЬ ВСЕ В libs.versions
-    implementation ("com.squareup.okhttp3:okhttp:4.10.0") // или более новая версия
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.10.0") // зависимость для логирования
-    implementation ("androidx.navigation:navigation-compose:2.8.6")
-    implementation ("androidx.compose.material:material-icons-core:1.7.7")
-    implementation ("androidx.compose.material:material-icons-extended:1.7.7") // для расширенных иконок
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("io.coil-kt:coil-compose:2.2.2")
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-    implementation("com.google.firebase:firebase-auth")
-
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+    implementation(libs.navigation.compose)
+    implementation(libs.material.icons.core)
+    implementation(libs.material.icons.extended)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.coil.compose)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
