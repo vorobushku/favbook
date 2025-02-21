@@ -16,7 +16,7 @@ fun AppNavigator(navController: NavHostController, startDestination: String) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable("auth_screen") { AuthScreen(navController) }
         composable("main_screen") { MainScreen(navController) }
-        composable("book_screen") { BookScreen() }
+        composable("book_screen") { BookScreen(navController) }
         composable("search_screen") { SearchScreen(navController) }
         composable("add_screen") { AddScreen() }
         composable("book_detail_screen/{title}/{coverUrl}") { backStackEntry ->
