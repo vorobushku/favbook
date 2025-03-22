@@ -20,18 +20,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.favbook.BuildConfig
 import com.example.favbook.R
 import com.example.favbook.data.network.RetrofitInstance
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun BookDetailScreen(title: String, coverUrl: String) {
     val bookDescription = remember { mutableStateOf<String?>(null) }
+    val decodedTitle = URLDecoder.decode(title, StandardCharsets.UTF_8.toString())
 
     // Загружаем описание книги
-    LaunchedEffect(title) {
-        val response = RetrofitInstance.api.searchBooks(query = title, apiKey = BuildConfig.GOOGLE_BOOKS_API_KEY)
+    LaunchedEffect(decodedTitle) {
+        val response = RetrofitInstance.api.searchBooks(query = decodedTitle, apiKey = BuildConfig.GOOGLE_BOOKS_API_KEY)
         val bookItem = response.items?.firstOrNull()
         bookDescription.value = bookItem?.volumeInfo?.description
     }
@@ -66,7 +70,7 @@ fun BookDetailScreen(title: String, coverUrl: String) {
 
                     // Название книги
                     Text(
-                        text = title,
+                        text = decodedTitle,
                         style = MaterialTheme.typography.titleLarge
                     )
 
