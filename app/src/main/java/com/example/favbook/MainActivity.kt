@@ -32,18 +32,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun DefaultPreview() {
-        val navController = rememberNavController()
-        // В Preview передаем корректный Scaffold с innerPadding
-        Scaffold(
-            bottomBar = { BottomBar(navController) }
-        ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                //AppNavigator(navController)
-            }
-        }
-    }
 }
