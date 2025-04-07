@@ -1,5 +1,6 @@
 package com.example.favbook.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,10 +34,24 @@ fun CategoryBooksScreen(category: String, navController: NavHostController) {
                 .collection("users")
                 .document(user.uid)
                 .collection("bookLists")
-                .whereEqualTo("listType", category)
                 .get()
                 .addOnSuccessListener { result ->
-                    val bookList = result.documents.mapNotNull { it.toObject(BookItem::class.java) }
+                    val bookList = result.documents.mapNotNull { document ->
+                        val bookItem = document.toObject(BookItem::class.java)
+                        val listType = document.getString("listType") ?: ""
+
+                        // Правильный разбор категорий
+                        val categoryList = listType.split(",").map { it.trim() }
+
+                        Log.d("FirestoreDebug", "Checking book: ${document.id}, listType: $listType, categoryList: $categoryList")
+
+                        if (categoryList.any { it == category }) { // Исправленный фильтр
+                            Log.d("FirestoreDebug", "✅ Book matches category: ${document.id}")
+                            bookItem
+                        } else {
+                            null
+                        }
+                    }
                     books.value = bookList
                 }
         }
