@@ -41,63 +41,6 @@ import com.example.favbook.BookItemView
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-//@Composable
-//fun BookScreen(navController: NavController) { // Добавляем navController
-//    val user = rememberFirebaseUser()
-//    val booksByList = remember { mutableStateOf<Map<String, List<BookItem>>>(emptyMap()) }
-//
-//    LaunchedEffect(user) {
-//        user?.let {
-//            loadUserBooks(it.uid) { groupedBooks ->
-//                booksByList.value = groupedBooks
-//            }
-//        }
-//    }
-//
-//    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-//        booksByList.value.keys.forEach { listType ->
-//            item {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .clickable {
-//                            navController.navigate("bookListScreen/$listType") // Переход на экран списка книг
-//                        }
-//                        .padding(vertical = 8.dp)
-//                ) {
-//                    Text(
-//                        text = listType,
-//                        style = MaterialTheme.typography.titleLarge,
-//                        modifier = Modifier.padding(8.dp)
-//                    )
-//                    Divider()
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//// Функция загрузки книг пользователя из Firestore
-//fun loadUserBooks(userId: String, onResult: (Map<String, List<BookItem>>) -> Unit) {
-//    val db = FirebaseFirestore.getInstance()
-//    db.collection("users").document(userId).collection("bookLists")
-//        .get()
-//        .addOnSuccessListener { result ->
-//            val groupedBooks = result.documents.mapNotNull { doc ->
-//                doc.toObject(BookItem::class.java)?.let { book ->
-//                    val listType = doc.getString("listType") ?: "Без категории"
-//                    listType to book
-//                }
-//            }.groupBy({ it.first }, { it.second })
-//
-//            onResult(groupedBooks)
-//        }
-//        .addOnFailureListener { e ->
-//            Log.e("Firestore", "Ошибка загрузки книг: ", e)
-//        }
-//}
-
-
 @Composable
 fun BookScreen(navController: NavHostController) {
     val user = rememberFirebaseUser()
@@ -111,8 +54,12 @@ fun BookScreen(navController: NavHostController) {
                 .collection("bookLists")
                 .get()
                 .addOnSuccessListener { result ->
-                    val uniqueCategories = result.documents.mapNotNull { it.getString("listType") }.distinct()
-                    categories.value = uniqueCategories
+                    val allCategories = result.documents
+                        .mapNotNull { it.getString("listType") }
+                        .flatMap { it.split(",").map { category -> category.trim() } }
+                        .distinct()
+
+                    categories.value = allCategories
                 }
         }
     }
@@ -130,7 +77,7 @@ fun BookScreen(navController: NavHostController) {
                         .padding(8.dp)
                         .clickable {
                             val encodedCategory = Uri.encode(category)
-                            navController.navigate("category_books_screen/$encodedCategory")
+                            navController.navigate("category_books_screen/${URLEncoder.encode(category, "UTF-8")}")
                         }
                         .background(Color.LightGray, RoundedCornerShape(8.dp))
                         .padding(16.dp)
