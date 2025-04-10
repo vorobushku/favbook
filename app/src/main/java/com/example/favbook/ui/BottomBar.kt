@@ -20,15 +20,12 @@ import androidx.navigation.NavHostController
 @Composable
 fun BottomBar(navController: NavHostController) {
     BottomAppBar(
-        //цвет тулбара и высота
         containerColor = Color.LightGray,
         modifier = Modifier.height(65.dp)
     ) {
-        //кнопка домой
         IconButton(
             onClick = {
                 navController.navigate("main_screen") {
-                    // Очистка стека, чтобы не было дублирования экранов
                     popUpTo("main_screen") { inclusive = true }
                 }
             },
@@ -36,10 +33,9 @@ fun BottomBar(navController: NavHostController) {
         ) {
             Icon(Icons.Default.Home, contentDescription = "Главная страница")
         }
-        // Spacer для выравнивания
+
         Spacer(modifier = Modifier.weight(1f)) // Центрируем другие кнопки
 
-        // Кнопка "Книжка"
         IconButton(onClick = { navController.navigate("book_screen") }) {
             Icon(
                 imageVector = Icons.Filled.Book,
@@ -47,10 +43,8 @@ fun BottomBar(navController: NavHostController) {
             )
         }
 
-        // Spacer для выравнивания
         Spacer(modifier = Modifier.weight(1f)) // Заполняет пространство между иконками
 
-        // Кнопка "Поиск"
         IconButton(onClick = { navController.navigate("search_screen") }) {
             Icon(
                 imageVector = Icons.Filled.Search,
@@ -58,10 +52,8 @@ fun BottomBar(navController: NavHostController) {
             )
         }
 
-        // Spacer для выравнивания
         Spacer(modifier = Modifier.weight(1f)) // Заполняет пространство между иконками
 
-        // Кнопка "Добавить" (Плюсик)
         IconButton(
             onClick = { navController.navigate("add_screen") },
             modifier = Modifier.padding(end = 16.dp) // Добавляем отступ от правого края

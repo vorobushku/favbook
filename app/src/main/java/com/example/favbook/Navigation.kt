@@ -3,36 +3,42 @@ package com.example.favbook
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.favbook.screens.AuthScreen
 import com.example.favbook.screens.MainScreen
 import com.example.favbook.screens.BookScreen
 import com.example.favbook.screens.SearchScreen
 import com.example.favbook.screens.AddScreen
+import com.example.favbook.screens.AuthorBooksScreen
 import com.example.favbook.screens.BookDetailScreen
 import com.example.favbook.screens.CategoryBooksScreen
 import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 
 @Composable
 fun AppNavigator(navController: NavHostController, startDestination: String) {
     NavHost(navController = navController, startDestination = startDestination) {
-        composable("auth_screen") { AuthScreen(navController) }
-        composable("main_screen") { MainScreen(navController) }
-//        composable("book_screen") { BookScreen() }
-        composable("book_screen") { BookScreen(navController) }
-        composable("search_screen") { SearchScreen(navController) }
-        composable("add_screen") { AddScreen(navController) }
-        composable("book_detail_screen/{title}/{coverUrl}") { backStackEntry ->
-//            val title = backStackEntry.arguments?.getString("title") ?: "Без названия"
-            val title = backStackEntry.arguments?.getString("title")?.let {
-                URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
-            } ?: "Без названия"
+        composable(Screen.Auth.route) { AuthScreen(navController) }
+        composable(Screen.Main.route) { MainScreen(navController) }
+        composable(Screen.Book.route) { BookScreen(navController) }
+        composable(Screen.Search.route) { SearchScreen(navController) }
+        composable(Screen.Add.route) { AddScreen(navController) }
+        composable(Screen.BookDetail.route,
+            arguments = listOf(
+                navArgument("title") { type = NavType.StringType },
+                navArgument("coverUrl") { type = NavType.StringType },
+                navArgument("authors") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val title = backStackEntry.arguments?.getString("title") ?: ""
             val coverUrl = backStackEntry.arguments?.getString("coverUrl") ?: ""
-            BookDetailScreen(title, coverUrl)
+            val authors = backStackEntry.arguments?.getString("authors") ?: ""
+
+            BookDetailScreen(title = title, coverUrl = coverUrl, authors = authors, navController = navController)
         }
-        composable("category_books_screen/{category}") { backStackEntry ->
+        composable(Screen.CategoryBooks.route) { backStackEntry ->
             // Получаем category, которая была передана
             val category = backStackEntry.arguments?.getString("category")?.let {
                 URLDecoder.decode(it, "UTF-8") // Раскодируем обратно
@@ -40,5 +46,10 @@ fun AppNavigator(navController: NavHostController, startDestination: String) {
             Log.d("NavigationDebug", "Navigated to category: $category")
             CategoryBooksScreen(category, navController)
         }
+        composable(Screen.AuthorBooks.route) { backStackEntry ->
+            val author = backStackEntry.arguments?.getString("author") ?: ""
+            AuthorBooksScreen(author = author, navController = navController)
+        }
+
     }
 }

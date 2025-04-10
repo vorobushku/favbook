@@ -5,6 +5,9 @@ val localProperties = rootProject.file("local.properties")
 val googleBooksApiKey: String = Properties().apply {
     localProperties.inputStream().use { load(it) }
 }.getProperty("GOOGLE_BOOKS_API_KEY") ?: throw IllegalStateException("API Key not found")
+val nytApiKey: String = Properties().apply {
+    localProperties.inputStream().use { load(it) }
+}.getProperty("NYTIMES_API_KEY") ?: throw IllegalStateException("NYTimes API Key not found")
 
 
 plugins {
@@ -31,6 +34,8 @@ android {
 
         // Используем правильную форму для добавления custom BuildConfig поля
         buildConfigField("String", "GOOGLE_BOOKS_API_KEY", "\"$googleBooksApiKey\"")
+        buildConfigField("String", "NYTIMES_API_KEY", "\"$nytApiKey\"")
+
     }
 
     buildFeatures {

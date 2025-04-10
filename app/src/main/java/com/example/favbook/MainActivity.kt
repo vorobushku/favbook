@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 
@@ -19,15 +20,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val user = rememberFirebaseUser()
-            val startDestination = if (user == null) "auth_screen" else "main_screen"
+            val startDestination = if (user == null) Screen.Auth.route else Screen.Main.route
 
-            // Создаем Scaffold с навигацией
+            val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
+
             Scaffold(
-                bottomBar = { BottomBar(navController) } // Нижний бар с навигацией
+                bottomBar = {
+                    if (currentDestination in Screen.bottomBarScreens) {
+                        BottomBar(navController)
+                    }
+                }
             ) { innerPadding ->
-                // Основной контент
                 Box(modifier = Modifier.padding(innerPadding)) {
-                    AppNavigator(navController,startDestination) // Обновленная навигация
+                    AppNavigator(navController,startDestination)
                 }
             }
         }

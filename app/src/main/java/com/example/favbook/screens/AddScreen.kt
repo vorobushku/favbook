@@ -1,27 +1,17 @@
 package com.example.favbook.screens
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -35,19 +25,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
 import com.example.favbook.R
 import com.example.favbook.data.model.BookItem
 import com.example.favbook.data.model.VolumeInfo
 import com.example.favbook.rememberFirebaseUser
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
-import java.util.UUID
 
 
 @Composable
@@ -138,14 +123,13 @@ fun AddScreen(navController: NavHostController) {
         Button(
             onClick = {
                 user?.let {
-                    // Создаем объект BookItem с нужными полями
                     val bookItem = BookItem(
-                        id = "", // Пример: генерируем ID или оставляем пустым
+                        id = "manual",
                         volumeInfo = VolumeInfo(
                             title = title,
                             authors = listOf(author),
                             description = description.takeIf { it.isNotEmpty() } ?: "Описание отсутствует",
-                            imageLinks = null // Устанавливаем null для обложки, если она не задана
+                            imageLinks = null
                         )
                     )
                     addBookToUserLibrary(it.uid, bookItem, selectedList)
@@ -162,8 +146,7 @@ fun AddScreen(navController: NavHostController) {
 fun addBookToUserLibrary(userId: String, book: BookItem, selectedList: String?) {
     val db = FirebaseFirestore.getInstance()
     val userBooksRef = db.collection("users").document(userId).collection("bookLists")
-
-    // Определяем список категорий (выбранная + "Добавленные книги")
+    
     val listType = listOfNotNull(selectedList, "Добавленные книги").joinToString(", ")
 
     val bookData = book.toMap() + mapOf(
