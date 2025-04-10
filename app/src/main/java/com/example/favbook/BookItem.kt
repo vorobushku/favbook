@@ -39,6 +39,7 @@ fun BookItem(book: BookItem, navController: NavHostController, user: FirebaseUse
     val coverUrl = book.volumeInfo.imageLinks?.thumbnail?.replace("http:", "https:")
     val encodedTitle = URLEncoder.encode(book.volumeInfo.title, StandardCharsets.UTF_8.toString())
     val encodedCoverUrl = URLEncoder.encode(coverUrl ?: "", StandardCharsets.UTF_8.toString())
+    val encodedAuthors = URLEncoder.encode(book.volumeInfo.authors?.joinToString(",") ?: "", StandardCharsets.UTF_8.toString())
 
     Row(
         modifier = Modifier
@@ -47,7 +48,7 @@ fun BookItem(book: BookItem, navController: NavHostController, user: FirebaseUse
             .background(Color.LightGray)
             .padding(8.dp)
             .clickable {
-                navController.navigate("book_detail_screen/$encodedTitle/$encodedCoverUrl")
+                navController.navigate("book_detail_screen/$encodedTitle/$encodedCoverUrl/$encodedAuthors")
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
