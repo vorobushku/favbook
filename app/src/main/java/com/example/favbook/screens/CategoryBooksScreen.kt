@@ -20,6 +20,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.text.font.FontWeight
 import com.example.favbook.BookItem
 
 
@@ -39,13 +40,11 @@ fun CategoryBooksScreen(category: String, navController: NavHostController) {
                     val bookList = result.documents.mapNotNull { document ->
                         val bookItem = document.toObject(BookItem::class.java)
                         val listType = document.getString("listType") ?: ""
+                        val bookId = bookItem?.id ?: ""
 
-                        // Правильный разбор категорий
                         val categoryList = listType.split(",").map { it.trim() }
 
-                        Log.d("FirestoreDebug", "Checking book: ${document.id}, listType: $listType, categoryList: $categoryList")
-
-                        if (categoryList.any { it == category }) { // Исправленный фильтр
+                        if (categoryList.any { it == category } && !bookId.startsWith("template_" )) {
                             Log.d("FirestoreDebug", "✅ Book matches category: ${document.id}")
                             bookItem
                         } else {
@@ -57,10 +56,19 @@ fun CategoryBooksScreen(category: String, navController: NavHostController) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(text = "Категория: $category", style = MaterialTheme.typography.titleLarge)
+    Column(modifier = Modifier.fillMaxSize().padding(15.dp)) {
+        Text(
+            text = category,
+            modifier = Modifier
+                .padding(top = 30.dp)
+                .padding(horizontal = 15.dp)
+            ,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         LazyColumn {
             items(books.value) { book ->
