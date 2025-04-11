@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,81 +42,90 @@ fun BookItem(book: BookItem, navController: NavHostController, user: FirebaseUse
     val coverUrl = book.volumeInfo.imageLinks?.thumbnail?.replace("http:", "https:")
     val encodedTitle = URLEncoder.encode(book.volumeInfo.title, StandardCharsets.UTF_8.toString())
     val encodedCoverUrl = URLEncoder.encode(coverUrl ?: "", StandardCharsets.UTF_8.toString())
-    val encodedAuthors = URLEncoder.encode(book.volumeInfo.authors?.joinToString(",") ?: "", StandardCharsets.UTF_8.toString())
+    val encodedAuthors = URLEncoder.encode(
+        book.volumeInfo.authors?.joinToString(",") ?: "",
+        StandardCharsets.UTF_8.toString()
+    )
 
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .background(Color.LightGray)
-            .padding(8.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp)
             .clickable {
                 navController.navigate("book_detail_screen/$encodedTitle/$encodedCoverUrl/$encodedAuthors")
             },
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(30.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
-        AsyncImage(
-            model = coverUrl?.takeIf { it.isNotEmpty() },
-            contentDescription = "Обложка книги",
-            placeholder = painterResource(R.drawable.placeholder),
-            error = painterResource(R.drawable.placeholder),
-            modifier = Modifier.size(50.dp)
-        )
-
-        Column (
-            modifier = Modifier.weight(1f)
-        )
-        {
-            Text(
-                text = "Название: ${book.volumeInfo.title}",
-                style = MaterialTheme.typography.titleMedium
+        Row(
+            modifier = Modifier
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = coverUrl?.takeIf { it.isNotEmpty() },
+                contentDescription = "Обложка книги",
+                placeholder = painterResource(R.drawable.placeholder),
+                error = painterResource(R.drawable.placeholder),
+                modifier = Modifier.size(60.dp)
             )
-            Text(
-                text = "Авторы: ${book.volumeInfo.authors?.joinToString(", ") ?: "Неизвестно"}",
-                style = MaterialTheme.typography.bodyMedium
+
+            Column(
+                modifier = Modifier.weight(1f)
             )
-        }
-
-        // Кнопка добавления в список
-        if (user != null) {
-            var showDialog by remember { mutableStateOf(false) }
-
-            IconButton(onClick = { showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Добавить")
+            {
+                Text(
+                    text = book.volumeInfo.title,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = book.volumeInfo.authors?.joinToString(", ") ?: "Неизвестно",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    title = { Text("Добавить книгу в список") },
-                    text = {
-                        Column {
-                            Button(onClick = {
-                                addBookToUserList(user.uid, book, "Хочу прочитать")
-                                showDialog = false
-                            }) {
-                                Text("Хочу прочитать")
+            if (user != null) {
+                var showDialog by remember { mutableStateOf(false) }
+
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Добавить")
+                }
+
+                if (showDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDialog = false },
+                        title = { Text("Добавить книгу в список") },
+                        text = {
+                            Column {
+                                Button(onClick = {
+                                    addBookToUserList(user.uid, book, "Хочу прочитать")
+                                    showDialog = false
+                                }) {
+                                    Text("Хочу прочитать")
+                                }
+                                Button(onClick = {
+                                    addBookToUserList(user.uid, book, "Читаю")
+                                    showDialog = false
+                                }) {
+                                    Text("Читаю")
+                                }
+                                Button(onClick = {
+                                    addBookToUserList(user.uid, book, "Прочитано")
+                                    showDialog = false
+                                }) {
+                                    Text("Прочитано")
+                                }
                             }
-                            Button(onClick = {
-                                addBookToUserList(user.uid, book, "Читаю")
-                                showDialog = false
-                            }) {
-                                Text("Читаю")
-                            }
-                            Button(onClick = {
-                                addBookToUserList(user.uid, book, "Прочитано")
-                                showDialog = false
-                            }) {
-                                Text("Прочитано")
+                        },
+                        confirmButton = {
+                            Button(onClick = { showDialog = false }) {
+                                Text("Отмена")
                             }
                         }
-                    },
-                    confirmButton = {
-                        Button(onClick = { showDialog = false }) {
-                            Text("Отмена")
-                        }
-                    }
-                )
+                    )
+                }
+
             }
         }
     }

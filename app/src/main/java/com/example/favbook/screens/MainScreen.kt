@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -66,9 +67,20 @@ fun MainScreen(navController: NavHostController) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
+//        Text(
+//            text = "Главный экран",
+//            style = MaterialTheme.typography.titleLarge,
+//        )
+
         Text(
             text = "Главный экран",
-            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .padding(top = 30.dp)
+                .padding(horizontal = 11.dp)
+            ,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -6,14 +6,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.favbook.R
@@ -66,17 +71,34 @@ fun AddScreen(navController: NavHostController) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(15.dp),
+        //horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Добавить книгу", style = MaterialTheme.typography.titleLarge)
+        //Text("Добавить книгу", style = MaterialTheme.typography.titleLarge)
+
+        Text(
+            text = "Добавить книгу",
+            modifier = Modifier
+                .padding(top = 30.dp)
+                .padding(horizontal = 11.dp)
+            ,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+
+        Spacer(modifier = Modifier.height(25.dp))
 
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
             label = { Text("Название книги") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(30.dp),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color.LightGray, focusedLabelColor = Color(0xFF494848),
+                unfocusedLabelColor = Color(0xFF807D7D)
+            )
         )
 
         OutlinedTextField(
@@ -84,25 +106,33 @@ fun AddScreen(navController: NavHostController) {
             onValueChange = { author = it },
             label = { Text("Автор") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(30.dp),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color.LightGray, focusedLabelColor = Color(0xFF494848),
+                unfocusedLabelColor = Color(0xFF807D7D)
+            )
         )
 
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
             label = { Text("Описание (необязательно)") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(30.dp),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color.LightGray, focusedLabelColor = Color(0xFF494848),
+                unfocusedLabelColor = Color(0xFF807D7D)
+            )
         )
 
-        Image(
-            painter = placeholderImage,
-            contentDescription = "Обложка книги",
-            modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(8.dp))
-        )
+//        Image(
+//            painter = placeholderImage,
+//            contentDescription = "Обложка книги",
+//            modifier = Modifier
+//                .size(100.dp)
+//                .clip(RoundedCornerShape(8.dp))
+//        )
 
-        Text("Выберите список", style = MaterialTheme.typography.bodyMedium)
+        Text("Выберите список", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
 
         lists.value.forEach { list ->
             Row(
@@ -146,7 +176,7 @@ fun AddScreen(navController: NavHostController) {
 fun addBookToUserLibrary(userId: String, book: BookItem, selectedList: String?) {
     val db = FirebaseFirestore.getInstance()
     val userBooksRef = db.collection("users").document(userId).collection("bookLists")
-    
+
     val listType = listOfNotNull(selectedList, "Добавленные книги").joinToString(", ")
 
     val bookData = book.toMap() + mapOf(

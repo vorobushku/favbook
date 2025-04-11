@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -113,7 +114,7 @@ fun BookDetailScreen(title: String, coverUrl: String, authors: String, navContro
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .height(260.dp)
                 .graphicsLayer {
                     translationY = -scrollState.value.toFloat() // Уезжает вверх при скролле
                 }
@@ -144,7 +145,9 @@ fun BookDetailScreen(title: String, coverUrl: String, authors: String, navContro
                     style = MaterialTheme.typography.headlineLarge.copy(
                         color = Color.White,
                         fontWeight = FontWeight.ExtraBold
-                    )
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 if (authorsState.value.isNotEmpty()) {
