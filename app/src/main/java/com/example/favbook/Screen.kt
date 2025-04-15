@@ -6,7 +6,7 @@ sealed class Screen(val route: String) {
     data object Book : Screen("book_screen")
     data object Search : Screen("search_screen")
     data object Add : Screen("add_screen")
-    data object BookDetail : Screen("book_detail_screen/{title}/{coverUrl}/{authors}")
+    data object BookDetail : Screen("book_detail_screen")
     data object CategoryBooks : Screen("category_books_screen/{category}")
     data object AuthorBooks : Screen("author_books_screen/{author}")
 

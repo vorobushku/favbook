@@ -134,19 +134,28 @@ fun AddScreen(navController: NavHostController) {
 
         Text("Выберите список", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
 
-        lists.value.forEach { list ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { selectedList = list }
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = selectedList == list,
-                    onClick = { selectedList = list }
-                )
-                Text(text = list, modifier = Modifier.padding(start = 8.dp))
+
+        if (lists.value.isEmpty()) {
+            Text(
+                text = "Сначала необходимо добавить списки",
+                color = Color.Red,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+            lists.value.forEach { list ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selectedList = list }
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedList == list,
+                        onClick = { selectedList = list }
+                    )
+                    Text(text = list, modifier = Modifier.padding(start = 8.dp))
+                }
             }
         }
 

@@ -25,18 +25,15 @@ fun AppNavigator(navController: NavHostController, startDestination: String) {
         composable(Screen.Book.route) { BookScreen(navController) }
         composable(Screen.Search.route) { SearchScreen(navController) }
         composable(Screen.Add.route) { AddScreen(navController) }
-        composable(Screen.BookDetail.route,
-            arguments = listOf(
-                navArgument("title") { type = NavType.StringType },
-                navArgument("coverUrl") { type = NavType.StringType },
-                navArgument("authors") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val title = backStackEntry.arguments?.getString("title") ?: ""
-            val coverUrl = backStackEntry.arguments?.getString("coverUrl") ?: ""
-            val authors = backStackEntry.arguments?.getString("authors") ?: ""
 
-            BookDetailScreen(title = title, coverUrl = coverUrl, authors = authors, navController = navController)
+        composable(Screen.BookDetail.route) {
+            val anyBook = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<AnyBook>("book")
+
+            anyBook?.let {
+                BookDetailScreen(anyBook = it, navController = navController)
+            }
         }
         composable(Screen.CategoryBooks.route) { backStackEntry ->
             // Получаем category, которая была передана
