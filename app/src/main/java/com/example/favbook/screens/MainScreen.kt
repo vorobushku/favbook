@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,11 +28,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.favbook.AnyBook
+import com.example.favbook.Screen
 import com.example.favbook.data.model.NYTBook
 import com.example.favbook.data.network.NYTimesRetrofitInstance
 import com.example.favbook.rememberFirebaseUser
@@ -91,7 +95,11 @@ fun MainScreen(navController: NavHostController) {
                 navController.navigate("auth_screen") {
                     popUpTo("main_screen") { inclusive = true }
                 }
-            }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFF5D79C), // Цвет фона кнопки
+                contentColor = Color.Black
+            )
         ) {
             Text("Выйти")
         }
@@ -119,11 +127,11 @@ fun NYTBookCard(book: NYTBook, navController: NavHostController) {
             .width(160.dp)
             .padding(8.dp)
             .clickable {
-                val coverUrl = book.book_image?.replace("http:", "https:")
-                val encodedTitle = URLEncoder.encode(book.title, StandardCharsets.UTF_8.toString())
-                val encodedCoverUrl = URLEncoder.encode(coverUrl ?: "", StandardCharsets.UTF_8.toString())
-                val encodedAuthors = URLEncoder.encode(book.author, StandardCharsets.UTF_8.toString())
-                navController.navigate("book_detail_screen/$encodedTitle/$encodedCoverUrl/$encodedAuthors")
+                navController.currentBackStackEntry?.savedStateHandle?.set(
+                    "book",
+                    AnyBook.NYTimesBook(book)
+                )
+                navController.navigate(Screen.BookDetail.route)
             }
     ) {
         AsyncImage(

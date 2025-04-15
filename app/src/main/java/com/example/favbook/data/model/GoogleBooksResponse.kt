@@ -1,7 +1,9 @@
 package com.example.favbook.data.model
 
+import android.os.Parcelable
 import androidx.annotation.Keep
 import com.google.firebase.firestore.IgnoreExtraProperties
+import kotlinx.parcelize.Parcelize
 
 @Keep
 @IgnoreExtraProperties
@@ -9,13 +11,13 @@ data class GoogleBooksResponse(
     val items: List<BookItem>? = null
 )
 
-// Модель ответа Google Books API
+@Parcelize
 @Keep
 @IgnoreExtraProperties
 data class BookItem(
     val id: String = "",
     val volumeInfo: VolumeInfo = VolumeInfo()
-) {
+) : Parcelable {
     constructor() : this("", VolumeInfo()) // Пустой конструктор
 
     fun toMap(): Map<String, Any?> {
@@ -34,6 +36,7 @@ data class BookItem(
     }
 }
 
+@Parcelize
 @Keep
 @IgnoreExtraProperties
 data class VolumeInfo(
@@ -41,15 +44,16 @@ data class VolumeInfo(
     val authors: List<String>? = null,
     val imageLinks: ImageLinks? = null,
     val description: String? = null
-) {
+) : Parcelable {
     constructor() : this("", null, null, null)
 }
 
+@Parcelize
 @Keep
 @IgnoreExtraProperties
 data class ImageLinks(
     val smallThumbnail: String? = null,
     val thumbnail: String? = null
-) {
+) : Parcelable {
     constructor() : this(null, null)
 }
