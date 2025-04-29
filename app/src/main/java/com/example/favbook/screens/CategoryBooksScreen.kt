@@ -72,7 +72,9 @@ fun CategoryBooksScreen(category: String, navController: NavHostController) {
 
         LazyColumn {
             items(books.value) { book ->
-                BookItem(book, navController, user)
+                BookItem(book, navController, user,onBookDeleted = {
+                    books.value = books.value.filterNot { it.id == book.id }
+                })
             }
         }
     }

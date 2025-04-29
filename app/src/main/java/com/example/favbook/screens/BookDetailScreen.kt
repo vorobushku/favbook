@@ -44,9 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.favbook.AnyBook
+import com.example.favbook.BookOptionsMenu
 import com.example.favbook.BuildConfig
 import com.example.favbook.R
 import com.example.favbook.data.model.BookItem
+import com.example.favbook.data.model.ImageLinks
+import com.example.favbook.data.model.VolumeInfo
 import com.example.favbook.data.network.RetrofitInstance
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -213,8 +216,12 @@ fun BookDetailScreen(anyBook: AnyBook, navController: NavController) {
                     )
                 }
 
-                Box(
-                    modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     AsyncImage(
                         model = coverUrl,
                         contentDescription = "Обложка книги",
@@ -222,76 +229,121 @@ fun BookDetailScreen(anyBook: AnyBook, navController: NavController) {
                         error = painterResource(R.drawable.placeholder),
                         modifier = Modifier
                             .size(width = 120.dp, height = 200.dp)
-                            .padding(horizontal = 3.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .align(Alignment.CenterStart)
+                            .padding(horizontal = 3.dp)
                     )
 
-                    Text(
-                        text = "...",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFD700)
-                        ),
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .clickable { showDialog = true }
-                            .padding(end = 20.dp)
-                    )
-                }
+                    Spacer(modifier = Modifier.weight(1f))
 
-                if (showDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDialog = false },
-                        title = { Text("Добавить книгу в список") },
-                        text = {
-                            Column {
-                                if (lists.value.isEmpty()) {
-                                    Text("Сначала необходимо добавить списки")
-                                } else {
-                                    lists.value.forEach { list ->
-                                        Button(
-                                            onClick = {
-                                                val bookData = convertAnyBookToMap(anyBook) + mapOf("listType" to list)
-
-                                                db.collection("users").document(user!!.uid)
-                                                    .collection("bookLists")
-                                                    .add(bookData + mapOf("listType" to list))
-                                                    .addOnSuccessListener {
-                                                        Log.d("Firestore", "Книга успешно добавлена в $list")
-                                                    }
-                                                    .addOnFailureListener { e ->
-                                                        Log.e("Firestore", "Ошибка при добавлении книги", e)
-                                                    }
-
-                                                showDialog = false
-                                            },
-                                            modifier = Modifier
-                                                .padding(vertical = 2.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFF5D79C), // Цвет фона кнопки
-                                                contentColor = Color.Black
-                                            )
-                                        ) {
-                                            Text(list)
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        confirmButton = {
-                            Button(
-                                onClick = { showDialog = false },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Gray, // Цвет фона кнопки
-                                )
-                            ) {
-                                Text("Отмена")
-                            }
+                    BookOptionsMenu(
+                        book = convertAnyBookToBookItem(anyBook),
+                        user = user!!,
+                        icon = {
+                            Text(
+                                text = "...",
+                                style = MaterialTheme.typography.headlineLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFD700)
+                                ),
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
                         }
                     )
                 }
 
+//                Box(
+//                    modifier = Modifier.fillMaxWidth()) {
+//                    AsyncImage(
+//                        model = coverUrl,
+//                        contentDescription = "Обложка книги",
+//                        placeholder = painterResource(R.drawable.placeholder),
+//                        error = painterResource(R.drawable.placeholder),
+//                        modifier = Modifier
+//                            .size(width = 120.dp, height = 200.dp)
+//                            .padding(horizontal = 3.dp)
+//                            .clip(RoundedCornerShape(8.dp))
+//                            .align(Alignment.CenterStart)
+//                    )
+//
+////                    Text(
+////                        text = "...",
+////                        style = MaterialTheme.typography.headlineLarge.copy(
+////                            fontWeight = FontWeight.Bold,
+////                            color = Color(0xFFFFD700)
+////                        ),
+////                        modifier = Modifier
+////                            .align(Alignment.CenterEnd)
+////                            .clickable { showDialog = true }
+////                            .padding(end = 20.dp)
+////                    )
+//                    BookOptionsMenu(
+//                        book = convertAnyBookToBookItem(anyBook),
+//                        user = user!!,
+//                        icon = {
+//                            Text(
+//                                text = "...",
+//                                style = MaterialTheme.typography.headlineLarge.copy(
+//                                    fontWeight = FontWeight.Bold,
+//                                    color = Color(0xFFFFD700)
+//                                ),
+//                                modifier = Modifier.padding(end = 20.dp).align(Alignment.CenterEnd)
+//                            )
+//                        }
+//                    )
+//                }
+
+//                if (showDialog) {
+//                    AlertDialog(
+//                        onDismissRequest = { showDialog = false },
+//                        title = { Text("Добавить книгу в список") },
+//                        text = {
+//                            Column {
+//                                if (lists.value.isEmpty()) {
+//                                    Text("Сначала необходимо добавить списки")
+//                                } else {
+//                                    lists.value.forEach { list ->
+//                                        Button(
+//                                            onClick = {
+//                                                val bookData = convertAnyBookToMap(anyBook) + mapOf("listType" to list)
+//
+//                                                db.collection("users").document(user!!.uid)
+//                                                    .collection("bookLists")
+//                                                    .add(bookData + mapOf("listType" to list))
+//                                                    .addOnSuccessListener {
+//                                                        Log.d("Firestore", "Книга успешно добавлена в $list")
+//                                                    }
+//                                                    .addOnFailureListener { e ->
+//                                                        Log.e("Firestore", "Ошибка при добавлении книги", e)
+//                                                    }
+//
+//                                                showDialog = false
+//                                            },
+//                                            modifier = Modifier
+//                                                .padding(vertical = 2.dp),
+//                                            colors = ButtonDefaults.buttonColors(
+//                                                containerColor = Color(0xFFF5D79C), // Цвет фона кнопки
+//                                                contentColor = Color.Black
+//                                            )
+//                                        ) {
+//                                            Text(list)
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        },
+//                        confirmButton = {
+//                            Button(
+//                                onClick = { showDialog = false },
+//                                colors = ButtonDefaults.buttonColors(
+//                                    containerColor = Color.Gray, // Цвет фона кнопки
+//                                )
+//                            ) {
+//                                Text("Отмена")
+//                            }
+//                        }
+//                    )
+//                }
+//
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
@@ -323,6 +375,27 @@ fun convertAnyBookToMap(anyBook: AnyBook): Map<String, Any?> {
                         "smallThumbnail" to nyt.book_image
                     ),
                     "description" to nyt.description
+                )
+            )
+        }
+    }
+}
+
+fun convertAnyBookToBookItem(anyBook: AnyBook): BookItem {
+    return when (anyBook) {
+        is AnyBook.GoogleBook -> anyBook.book
+        is AnyBook.NYTimesBook -> {
+            val nyt = anyBook.book
+            BookItem(
+                id = "nyt_${nyt.title.hashCode()}",
+                volumeInfo = VolumeInfo(
+                    title = nyt.title,
+                    authors = listOf(nyt.author),
+                    imageLinks = ImageLinks(
+                        thumbnail = nyt.book_image,
+                        smallThumbnail = nyt.book_image
+                    ),
+                    description = nyt.description
                 )
             )
         }

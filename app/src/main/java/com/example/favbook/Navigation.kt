@@ -25,7 +25,6 @@ fun AppNavigator(navController: NavHostController, startDestination: String) {
         composable(Screen.Book.route) { BookScreen(navController) }
         composable(Screen.Search.route) { SearchScreen(navController) }
         composable(Screen.Add.route) { AddScreen(navController) }
-
         composable(Screen.BookDetail.route) {
             val anyBook = navController.previousBackStackEntry
                 ?.savedStateHandle
@@ -36,7 +35,6 @@ fun AppNavigator(navController: NavHostController, startDestination: String) {
             }
         }
         composable(Screen.CategoryBooks.route) { backStackEntry ->
-            // Получаем category, которая была передана
             val category = backStackEntry.arguments?.getString("category")?.let {
                 URLDecoder.decode(it, "UTF-8") // Раскодируем обратно
             } ?: ""

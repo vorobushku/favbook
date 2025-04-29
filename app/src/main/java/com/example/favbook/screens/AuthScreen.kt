@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.favbook.AuthStyledButton
 import com.example.favbook.rememberAuth
 
 @Composable
@@ -36,13 +37,10 @@ fun AuthScreen(navController: NavHostController) {
     val password = remember { mutableStateOf("") }
     val errorMessage = remember { mutableStateOf<String?>(null) }
 
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        //horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
@@ -89,50 +87,40 @@ fun AuthScreen(navController: NavHostController) {
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(25.dp)
         ) {
 
-            Button(
-                onClick = {
-                    if (email.value.isBlank() || password.value.isBlank()) {
-                        errorMessage.value = "Пожалуйста, заполните все поля"
-                    } else {
-                        errorMessage.value = null
-                        auth.signInWithEmailAndPassword(email.value.trim(), password.value.trim())
-                            .addOnSuccessListener {
-                                navController.navigate("main_screen") {
-                                    popUpTo("auth_screen") { inclusive = true }
-                                }
+            AuthStyledButton("Log In", Modifier.weight(1f)) {
+                if (email.value.isBlank() || password.value.isBlank()) {
+                    errorMessage.value = "Пожалуйста, заполните все поля"
+                } else {
+                    errorMessage.value = null
+                    auth.signInWithEmailAndPassword(email.value.trim(), password.value.trim())
+                        .addOnSuccessListener {
+                            navController.navigate("main_screen") {
+                                popUpTo("auth_screen") { inclusive = true }
                             }
-                            .addOnFailureListener { errorMessage.value = it.message }
-                    }
-                },
-                modifier = Modifier.weight(1f).size(55.dp)
-            ) {
-                Text("Log In")
+                        }
+                        .addOnFailureListener { errorMessage.value = it.message }
+                }
             }
 
-            Button(
-                onClick = {
-                    if (email.value.isBlank() || password.value.isBlank()) {
-                        errorMessage.value = "Пожалуйста, заполните все поля"
-                    } else {
-                        errorMessage.value = null
-                        auth.createUserWithEmailAndPassword(
-                            email.value.trim(),
-                            password.value.trim()
-                        )
-                            .addOnSuccessListener {
-                                navController.navigate("main_screen") {
-                                    popUpTo("auth_screen") { inclusive = true }
-                                }
+            AuthStyledButton("Sign Up", Modifier.weight(1f)) {
+                if (email.value.isBlank() || password.value.isBlank()) {
+                    errorMessage.value = "Пожалуйста, заполните все поля"
+                } else {
+                    errorMessage.value = null
+                    auth.createUserWithEmailAndPassword(
+                        email.value.trim(),
+                        password.value.trim()
+                    )
+                        .addOnSuccessListener {
+                            navController.navigate("main_screen") {
+                                popUpTo("auth_screen") { inclusive = true }
                             }
-                            .addOnFailureListener { errorMessage.value = it.message }
-                    }
-                },
-                modifier = Modifier.weight(1f).size(55.dp)
-            ) {
-                Text("Sign Up")
+                        }
+                        .addOnFailureListener { errorMessage.value = it.message }
+                }
             }
         }
 
