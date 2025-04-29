@@ -1,8 +1,8 @@
 package com.example.favbook
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -37,20 +36,10 @@ import coil.compose.AsyncImage
 import com.example.favbook.data.model.BookItem
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Composable
-fun BookItem(book: BookItem, navController: NavHostController, user: FirebaseUser?) {
+fun BookItem(book: BookItem, navController: NavHostController, user: FirebaseUser?,onBookDeleted: (() -> Unit)? = null) {
     val coverUrl = book.volumeInfo.imageLinks?.thumbnail?.replace("http:", "https:")
-    val encodedTitle = URLEncoder.encode(book.volumeInfo.title, StandardCharsets.UTF_8.toString())
-    val encodedCoverUrl = URLEncoder.encode(coverUrl ?: "", StandardCharsets.UTF_8.toString())
-    val encodedAuthors = URLEncoder.encode(
-        book.volumeInfo.authors?.joinToString(",") ?: "",
-        StandardCharsets.UTF_8.toString()
-    )
-
-    val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
     val lists = remember { mutableStateOf<List<String>>(emptyList()) }
 
@@ -111,53 +100,164 @@ fun BookItem(book: BookItem, navController: NavHostController, user: FirebaseUse
             }
 
             if (user != null) {
-                var showDialog by remember { mutableStateOf(false) }
+                var expanded by remember { mutableStateOf(false) }
+                var userBookDocId by remember { mutableStateOf<String?>(null) }
+                var currentListType by remember { mutableStateOf<String?>(null) }
 
-                IconButton(onClick = { showDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Добавить")
-                }
-
-                if (showDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDialog = false },
-                        title = { Text("Добавить книгу в список") },
-                        text = {
-                            Column {
-                                if (lists.value.isEmpty()) {
-                                    Text("Сначала необходимо добавить списки")
-                                } else {
-                                    lists.value.forEach { list ->
-                                        Button(
-                                            onClick = {
-                                                addBookToUserList(user.uid, book, list)
-                                                showDialog = false
-                                            },
-                                            modifier = Modifier.padding(horizontal = 2.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFF5D79C), // Цвет фона кнопки
-                                                contentColor = Color.Black
-                                            )
-                                        ) {
-                                            Text(list)
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        confirmButton = {
-                            Button(
-                                onClick = { showDialog = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-                                ) {
-                                Text("Отмена")
+                // Проверяем, есть ли книга в Firestore
+                LaunchedEffect(book.id, user.uid) {
+                    val userBooksRef = db.collection("users").document(user.uid).collection("bookLists")
+                    userBooksRef
+                        .whereEqualTo("id", book.id)
+                        .get()
+                        .addOnSuccessListener { result ->
+                            if (!result.isEmpty) {
+                                val doc = result.documents.first()
+                                userBookDocId = doc.id
+                                currentListType = doc.getString("listType")
+                            } else {
+                                userBookDocId = null
+                                currentListType = null
                             }
                         }
-                    )
                 }
 
+                BookOptionsMenu(
+                    book = book,
+                    user = user,
+                    icon = {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Опции")
+                    },
+                    onBookDeleted = onBookDeleted
+                )
+
+//                Box {
+//                    var showMenuDialog by remember { mutableStateOf(false) }
+//
+//                    IconButton(onClick = { showMenuDialog = true }) {
+//                        Icon(Icons.Default.MoreVert, contentDescription = "Опции")
+//                    }
+//
+//                    if (showMenuDialog) {
+//                        AlertDialog(
+//                            onDismissRequest = { showMenuDialog = false },
+//                            title = { Text(text = if (userBookDocId == null) "Добавить книгу в список" else "Управление книгой") },
+//                            text = {
+//                                Column {
+//                                    if (userBookDocId == null) {
+//                                        if (lists.value.isEmpty()) {
+//                                            Text("Сначала необходимо добавить списки")
+//                                        } else {
+//                                            lists.value.forEach { list ->
+//                                                PrimaryStyledButton(text = list) {
+//                                                    addBookToUserList(user.uid, book, list)
+//                                                    showMenuDialog = false
+//                                                }
+//                                            }
+//                                        }
+//                                    } else {
+//                                        PrimaryStyledButton(text = "Удалить из списка") {
+//                                            deleteBookFromUserList(user.uid, userBookDocId!!)
+//                                            onBookDeleted?.invoke()
+//                                            showMenuDialog = false
+//                                        }
+//                                        val otherLists = lists.value.filter { it != currentListType }
+//                                        if (otherLists.isNotEmpty()) {
+//                                            Text("Переместить в категорию: ", style = MaterialTheme
+//                                                .typography.titleLarge, color = Color.Black, modifier = Modifier.padding(7.dp))
+//                                            otherLists.forEach { list ->
+//                                                PrimaryStyledButton(list) {
+//                                                    updateBookCategory(user.uid, userBookDocId!!, list)
+//                                                    currentListType = list
+//                                                    onBookDeleted?.invoke()
+//                                                    showMenuDialog = false
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            },
+//                            confirmButton = {
+//                                CancelStyledButton("Отмена") {showMenuDialog = false}
+//                            }
+//                        )
+//                    }
+//                }
             }
         }
     }
+}
+
+@Composable
+fun CancelStyledButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Gray,
+        ),
+        modifier = Modifier
+            .padding(vertical = 2.dp)
+    ) {
+        Text(text)
+    }
+}
+
+@Composable
+fun PrimaryStyledButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFF5D79C),
+            contentColor = Color.Black
+        ),
+        modifier = Modifier
+            .padding(vertical = 2.dp)
+    ) {
+        Text(text)
+    }
+}
+
+@Composable
+fun AuthStyledButton(text: String, modifier: Modifier, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(60),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFF5D79C),
+            contentColor = Color.Black
+        ),
+        modifier = modifier
+            .padding(vertical = 2.dp)
+            .size(60.dp)
+    ) {
+        Text(text)
+    }
+}
+
+fun deleteBookFromUserList(userId: String, documentId: String) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("users").document(userId).collection("bookLists").document(documentId)
+        .delete()
+        .addOnSuccessListener {
+            Log.d("Firestore", "Book deleted from list")
+        }
+        .addOnFailureListener { e ->
+            Log.e("Firestore", "Error deleting book", e)
+        }
+}
+
+fun updateBookCategory(userId: String, documentId: String, newList: String) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("users").document(userId).collection("bookLists").document(documentId)
+        .update("listType", newList)
+        .addOnSuccessListener {
+            Log.d("Firestore", "Book moved to $newList")
+        }
+        .addOnFailureListener { e ->
+            Log.e("Firestore", "Error moving book", e)
+        }
 }
 
 fun addBookToUserList(userId: String, book: BookItem, listType: String) {
@@ -174,3 +274,4 @@ fun addBookToUserList(userId: String, book: BookItem, listType: String) {
             Log.e("Firestore", "Error adding book to user list", e)
         }
 }
+
