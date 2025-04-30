@@ -15,6 +15,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.gmsGoogleServices)
     id("kotlin-parcelize")
+    id("kotlin-kapt")
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -75,6 +77,7 @@ android {
 
 dependencies {
 
+
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.navigation.compose)
@@ -86,6 +89,11 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+    implementation("com.squareup:javapoet:1.13.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
