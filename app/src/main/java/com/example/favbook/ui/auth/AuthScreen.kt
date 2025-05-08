@@ -81,16 +81,16 @@ fun AuthScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(25.dp)
         ) {
-            AuthStyledButton("Log In", Modifier.weight(1f)) {
-                viewModel.login {
+            AuthStyledButton("Sign Up", Modifier.weight(1f)) {
+                viewModel.signUp {
                     navController.navigate("main_screen") {
                         popUpTo("auth_screen") { inclusive = true }
                     }
                 }
             }
 
-            AuthStyledButton("Sign Up", Modifier.weight(1f)) {
-                viewModel.signUp {
+            AuthStyledButton("Log In", Modifier.weight(1f)) {
+                viewModel.login {
                     navController.navigate("main_screen") {
                         popUpTo("auth_screen") { inclusive = true }
                     }
