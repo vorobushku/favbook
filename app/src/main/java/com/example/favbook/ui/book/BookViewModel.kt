@@ -1,6 +1,7 @@
 package com.example.favbook.ui.book
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,5 +73,108 @@ class BookViewModel @Inject constructor(
                         uiState = uiState.copy(newCategory = "")
                     }
             }
+    }
+
+    fun dismissCategoryOptions() {
+        uiState = uiState.copy(expandedCategory = null)
+    }
+
+
+    fun onEditCategoryChange(value: String) {
+        uiState = uiState.copy(editedCategory = value)
+    }
+
+    fun updateCategory(userId: String, context: Context) {
+        val oldCategory = uiState.selectedCategory ?: return
+        val newCategory = uiState.editedCategory.trim()
+        if (newCategory.isBlank()) return
+
+        val userDoc = firestore.collection("users").document(userId)
+
+        Log.d("BookViewModel", "Начинаю обновление категории: $oldCategory -> $newCategory")
+
+        userDoc.collection("bookLists")
+            .get()
+            .addOnSuccessListener { result ->
+                val batch = firestore.batch()
+                var foundAny = false
+
+                for (doc in result.documents) {
+                    val listTypeString = doc.getString("listType") ?: continue
+                    if (!listTypeString.contains(oldCategory)) continue
+
+                    foundAny = true
+                    val updatedListType = listTypeString
+                        .split(",")
+                        .map { it.trim() }
+                        .map { if (it == oldCategory) newCategory else it }
+                        .distinct()
+                        .joinToString(", ")
+
+                    val docId = doc.getString("id") ?: ""
+
+                    if (docId.startsWith("template_")) {
+                        val newId = "template_${newCategory.lowercase()}"
+                        batch.update(doc.reference, mapOf(
+                            "listType" to newCategory,
+                            "id" to newId
+                        ))
+                    } else {
+                        batch.update(doc.reference, "listType", updatedListType)
+                    }
+                }
+
+                if (!foundAny) {
+                    Log.w("BookViewModel", "Не найдено документов с категорией $oldCategory")
+                }
+
+                batch.commit().addOnSuccessListener {
+                    Log.d("BookViewModel", "Категория успешно обновлена")
+                    loadCategories(userId)
+                    uiState = uiState.copy(
+                        showEditDialog = false,
+                        editedCategory = "",
+                        selectedCategory = null
+                    )
+                }.addOnFailureListener {
+                    Log.e("BookViewModel", "Ошибка при обновлении категории", it)
+                    Toast.makeText(context, "Ошибка при обновлении категории", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    fun deleteCategory(userId: String, category: String) {
+        firestore.collection("users")
+            .document(userId)
+            .collection("bookLists")
+            .whereEqualTo("listType", category)
+            .get()
+            .addOnSuccessListener { result ->
+                for (doc in result.documents) {
+                    doc.reference.delete()
+                }
+                loadCategories(userId)
+                dismissCategoryOptions()
+            }
+    }
+
+    fun onCategoryOptionsExpand(category: String) {
+        uiState = uiState.copy(expandedCategory = category)
+    }
+
+    fun onCategoryOptionsDismiss() {
+        uiState = uiState.copy(expandedCategory = null)
+    }
+
+    fun onEditCategoryDialogShow(category: String) {
+        uiState = uiState.copy(
+            showEditDialog = true,
+            selectedCategory = category,
+            editedCategory = category
+        )
+    }
+
+    fun onEditCategoryDialogDismiss() {
+        uiState = uiState.copy(showEditDialog = false)
     }
 }
